@@ -22,6 +22,10 @@ namespace quizGame
         public StartForm()
         {
             InitializeComponent();
+
+            this.FormBorderStyle = FormBorderStyle.FixedSingle; // Ngăn resize
+            this.MaximizeBox = false; // Ẩn nút phóng to
+            this.MinimizeBox = true; // Hiển thị nút thu nhỏ (tuỳ chọn)
             CreateDatabase();
             LoadQuestions();
             PopulateLevelComboBox();
@@ -353,8 +357,9 @@ namespace quizGame
             {
                 QuestionAndAnswers selectedQuestion = (QuestionAndAnswers)dgvQuestions.SelectedRows[0].DataBoundItem;
                 DeleteQuestion(selectedQuestion.Id);
-                LoadQuestions(); // Load lại datagridview sau khi xóa
-                PopulateLevelComboBox(); // Cập nhật lại combobox level
+                MessageBox.Show("Xóa Thành công","Thông báo",MessageBoxButtons.OK, MessageBoxIcon.Information);
+                LoadQuestions();
+                PopulateLevelComboBox(); 
             }
             else
             {
@@ -373,8 +378,65 @@ namespace quizGame
                     command.CommandText = "DELETE FROM questionanswer WHERE Id = @Id";
                     command.Parameters.AddWithValue("@Id", id);
                     command.ExecuteNonQuery();
+
                 }
             }
         }
+
+        private void btnThem_Click(object sender, EventArgs e)
+        {
+            string questionText = txtQues.Text.Trim();
+            string answersText = txtAnsw.Text.Trim();
+            string correctAnswerText = txtCorrectAns.Text.Trim();
+
+            // Validate inputs
+            if (string.IsNullOrEmpty(questionText))
+            {
+                MessageBox.Show("Vui lòng nhập câu hỏi!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(answersText))
+            {
+                MessageBox.Show("Vui lòng nhập các đáp án (dùng dấu phẩy để phân tách)!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!int.TryParse(correctAnswerText, out int correctAnswerIndex) || correctAnswerIndex < 0)
+            {
+                MessageBox.Show("Đáp án đúng phải là một số nguyên không âm!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // Parse answers
+            List<string> answers = answersText.Split(',').Select(a => a.Trim()).ToList();
+            if (correctAnswerIndex >= answers.Count)
+            {
+                MessageBox.Show("Đáp án đúng phải nằm trong danh sách các đáp án đã nhập!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // Add to the database
+            string connectionString = $"Data Source={dbPath};Version=3;";
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                using (SQLiteCommand command = new SQLiteCommand(connection))
+                {
+                    command.CommandText = "INSERT INTO questionanswer (Question, Answer, CorrectAnswer) VALUES (@Question, @Answer, @CorrectAnswer)";
+                    command.Parameters.AddWithValue("@Question", questionText);
+                    command.Parameters.AddWithValue("@Answer", JsonConvert.SerializeObject(answers));
+                    command.Parameters.AddWithValue("@CorrectAnswer", correctAnswerIndex);
+
+                    command.ExecuteNonQuery();
+                }
+            }
+
+            // Refresh UI
+            MessageBox.Show("Câu hỏi đã được thêm thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            LoadQuestions(); // Reload questions in the DataGridView
+            PopulateLevelComboBox(); // Update level combo box
+        }
+
     }
 }

@@ -29,6 +29,11 @@ namespace quizGame
         public Form1(StartForm startForm)
         {
             InitializeComponent();
+
+            this.FormBorderStyle = FormBorderStyle.FixedSingle; // Ngăn resize
+            this.MaximizeBox = false; // Ẩn nút phóng to
+            this.MinimizeBox = true; // Hiển thị nút thu nhỏ (tuỳ chọn)
+
             this.startForm = startForm;
         }
 
@@ -128,16 +133,17 @@ namespace quizGame
 
             if (selectedAnswer == correctAnswer)
             {
+                senderObject.BackColor = Color.LightGreen;
                 score++;
-                await Task.Delay(1500);
-                nextQuestion();
+ 
             }
             else
             {
+                senderObject.BackColor = Color.Red;
                 highlightCorrectAnswer();
+            }
                 await Task.Delay(1500);
                 nextQuestion();
-            }
         }
 
         private void highlightCorrectAnswer()
@@ -230,6 +236,14 @@ namespace quizGame
             }
         }
 
-
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            this.Hide();
+            var parentForm = this.Owner as StartForm;
+            if (parentForm != null)
+            {
+                parentForm.Show();
+            }
+        }
     }
 }
