@@ -67,7 +67,11 @@ namespace quizGame
                 totalQuestions = questions.Count;
 
 
-                askQuestion(questionNumber, questions);
+                // Đặt currentQuestionIndex về 0 trước khi hiển thị câu hỏi đầu tiên
+                currentQuestionIndex = 0;
+
+                // Gọi phương thức askQuestion với danh sách câu hỏi
+                askQuestion(questions);
             }
             catch (Exception ex)
             {
@@ -80,21 +84,16 @@ namespace quizGame
         }
 
 
-        private void askQuestion(int qnum, List<QuestionAndAnswers> questions)
+        private void askQuestion(List<QuestionAndAnswers> questions)
         {
-
-            int startIndex = (SelectedLevel - 1) * 40;
-            int adjustedIndex = startIndex + qnum - 1;
-
-            if (adjustedIndex >= questions.Count || adjustedIndex < 0)
+            if (currentQuestionIndex >= questions.Count || currentQuestionIndex < 0)
             {
                 return; // Không cần hiển thị MessageBox ở đây nữa
             }
 
-            var question = questions[adjustedIndex];
+            var question = questions[currentQuestionIndex];
             lblQuestion.Text = question.Questions;
             resetButtonColors();
-
 
             if (question.Answers.Count >= 4)
             {
@@ -105,7 +104,6 @@ namespace quizGame
             }
             else
             {
-                //Handle cases with less than 4 answers (optional)
                 button1.Text = question.Answers[0];
                 button2.Text = question.Answers.Count > 1 ? question.Answers[1] : "";
                 button3.Text = question.Answers.Count > 2 ? question.Answers[2] : "";
@@ -123,12 +121,10 @@ namespace quizGame
             button4.BackColor = System.Drawing.Color.FromKnownColor(KnownColor.Control);
         }
 
-
         private async void button2_Click(object sender, EventArgs e)
         {
             var senderObject = (Button)sender;
             int selectedAnswer = Convert.ToInt32(senderObject.Tag);
-
 
             if (selectedAnswer == correctAnswer)
             {
@@ -138,9 +134,7 @@ namespace quizGame
             }
             else
             {
-
                 highlightCorrectAnswer();
-
                 await Task.Delay(1500);
                 nextQuestion();
             }
@@ -167,22 +161,18 @@ namespace quizGame
 
         private void nextQuestion()
         {
-            questionNumber++;
-            int startIndex = (SelectedLevel - 1) * 40;
-            int endIndex = Math.Min(startIndex + 40, questions.Count);
-
-            if (questionNumber > endIndex)
+            currentQuestionIndex++;
+            if (currentQuestionIndex >= questions.Count)
             {
                 // Quiz completed
-                percentage = (score * 100) / endIndex;
-                MessageBox.Show($"Quiz Ended!\nScore: {score}/{endIndex}\nPercentage: {percentage}%");
+                percentage = (score * 100) / questions.Count;
+                MessageBox.Show($"Quiz Ended!\nScore: {score}/{questions.Count}\nPercentage: {percentage}%");
                 score = 0;
-                questionNumber = 1;
+                currentQuestionIndex = 0; // Reset lại index
             }
             else
             {
-
-                askQuestion(questionNumber, questions);
+                askQuestion(questions);
             }
         }
         public void UpdateQuestions(List<QuestionAndAnswers> newQuestions, int level)
@@ -198,18 +188,17 @@ namespace quizGame
         {
             currentQuestionIndex = 0;
             score = 0;
-            questionNumber = 1; //Thêm dòng này để reset questionNumber
 
             if (questions != null && questions.Count > 0)
             {
-                ShowQuestion();
-                nextQuestion();
+                askQuestion(questions);
             }
             else
             {
                 MessageBox.Show("Không có câu hỏi cho level này!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
+
 
 
         private void ShowQuestion()
