@@ -19,6 +19,7 @@ namespace quizGame
     {
         private Form1 mainForm;
         private string dbPath = "quiziz.db";
+        public bool isChecked { get; set; } = false;
         public StartForm()
         {
             InitializeComponent();
@@ -66,6 +67,13 @@ namespace quizGame
                 {
                     MessageBox.Show($"Không có câu hỏi cho level {selectedLevel}.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
+                }
+                // Kiểm tra xem checkbox `checkSort` có được chọn hay không
+                if (isChecked)
+                {
+                    // Sắp xếp ngẫu nhiên danh sách câu hỏi
+                    Random random = new Random();
+                    questionsForLevel = questionsForLevel.OrderBy(q => random.Next()).ToList();
                 }
 
                 mainForm.UpdateQuestions(questionsForLevel, selectedLevel);
@@ -292,8 +300,9 @@ namespace quizGame
         {
             LoadQuestions(); // Load questions when the form loads
             PopulateLevelComboBox(); // Update level combobox
+            this.label1.BackColor = this.BackColor;
         }
-
+        #region Sửa 1 câu hỏi
         private void btnSua_Click(object sender, EventArgs e)
         {
             //Implementation for updating question
@@ -327,7 +336,8 @@ namespace quizGame
                 }
             }
         }
-
+        #endregion
+        #region Xóa tất cả câu hỏi
         private void btnClear_Click(object sender, EventArgs e)
         {
             if (MessageBox.Show("Bạn có chắc chắn muốn xóa tất cả câu hỏi?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
@@ -350,7 +360,8 @@ namespace quizGame
                 }
             }
         }
-
+        #endregion
+        #region Xóa 1 câu hỏi
         private void btnDelete_Click(object sender, EventArgs e)
         {
             if (dgvQuestions.SelectedRows.Count > 0)
@@ -382,7 +393,8 @@ namespace quizGame
                 }
             }
         }
-
+        #endregion
+        #region Thêm 1 câu hỏi
         private void btnThem_Click(object sender, EventArgs e)
         {
             string questionText = txtQues.Text.Trim();
@@ -436,6 +448,16 @@ namespace quizGame
             MessageBox.Show("Câu hỏi đã được thêm thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             LoadQuestions(); // Reload questions in the DataGridView
             PopulateLevelComboBox(); // Update level combo box
+        }
+        #endregion
+
+        private void checkSort_CheckedChanged(object sender, EventArgs e)
+        {
+            isChecked = checkSort.Checked;
+        }
+        public void UpdateCheckSortStatus()
+        {
+            checkSort.Checked = false; // Cập nhật cả trạng thái hiển thị của checkbox
         }
 
     }

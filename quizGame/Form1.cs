@@ -20,7 +20,7 @@ namespace quizGame
         int totalQuestions;
         private List<QuestionAndAnswers> questions = new List<QuestionAndAnswers>();
         private int currentQuestionIndex = 0;
-
+        
 
         public int SelectedLevel { get; set; } = 1;
 
@@ -97,7 +97,7 @@ namespace quizGame
             }
 
             var question = questions[currentQuestionIndex];
-            lblQuestion.Text = question.Questions;
+            lblQuestion.Text = "Câu "+(currentQuestionIndex+1)+": " +question.Questions;
             resetButtonColors();
 
             if (question.Answers.Count >= 4)
@@ -193,8 +193,7 @@ namespace quizGame
         public void ResetQuiz()
         {
             currentQuestionIndex = 0;
-            score = 0;
-
+            score = 0;          
             if (questions != null && questions.Count > 0)
             {
                 askQuestion(questions);
@@ -204,8 +203,6 @@ namespace quizGame
                 MessageBox.Show("Không có câu hỏi cho level này!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
-
-
 
         private void ShowQuestion()
         {
@@ -232,18 +229,37 @@ namespace quizGame
             var parentForm = this.Owner as StartForm;
             if (parentForm != null)
             {
+                parentForm.UpdateCheckSortStatus(); // Truyền trạng thái isChecked từ StartForm
+
                 parentForm.Show();
             }
         }
-
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             this.Hide();
             var parentForm = this.Owner as StartForm;
             if (parentForm != null)
             {
+                parentForm.UpdateCheckSortStatus(); // Truyền trạng thái isChecked từ StartForm
                 parentForm.Show();
             }
         }
+
+
+        private void Form1_Paint(object sender, PaintEventArgs e)
+        {
+            // Tạo một hiệu ứng bóng mờ cho Button
+            foreach (Control c in this.Controls)
+            {
+                if (c is Button)
+                {
+                    Button btn = (Button)c;
+
+                    // Vẽ bóng đổ
+                    e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, Color.Black)), btn.Bounds.X + 10, btn.Bounds.Y + 10, btn.Width, btn.Height);
+                }
+            }
+        }
+
     }
 }
