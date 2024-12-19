@@ -83,9 +83,9 @@ namespace quizGame.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap csgo1 {
+        internal static System.Drawing.Bitmap data_processing {
             get {
-                object obj = ResourceManager.GetObject("csgo1", resourceCulture);
+                object obj = ResourceManager.GetObject("data-processing", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -93,9 +93,9 @@ namespace quizGame.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap fortnite {
+        internal static System.Drawing.Bitmap delete {
             get {
-                object obj = ResourceManager.GetObject("fortnite", resourceCulture);
+                object obj = ResourceManager.GetObject("delete", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -103,9 +103,9 @@ namespace quizGame.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap gears_of_war {
+        internal static System.Drawing.Bitmap import {
             get {
-                object obj = ResourceManager.GetObject("gears of war", resourceCulture);
+                object obj = ResourceManager.GetObject("import", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -113,9 +113,9 @@ namespace quizGame.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap halo {
+        internal static System.Drawing.Bitmap maintenance {
             get {
-                object obj = ResourceManager.GetObject("halo", resourceCulture);
+                object obj = ResourceManager.GetObject("maintenance", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -123,9 +123,9 @@ namespace quizGame.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap questions {
+        internal static System.Drawing.Bitmap plus {
             get {
-                object obj = ResourceManager.GetObject("questions", resourceCulture);
+                object obj = ResourceManager.GetObject("plus", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -133,9 +133,9 @@ namespace quizGame.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap witcher3 {
+        internal static System.Drawing.Bitmap start_button {
             get {
-                object obj = ResourceManager.GetObject("witcher3", resourceCulture);
+                object obj = ResourceManager.GetObject("start-button", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

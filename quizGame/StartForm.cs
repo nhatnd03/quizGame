@@ -12,6 +12,8 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using System.IO;
 using Newtonsoft.Json;
+using quizGame.Resources.Custom;
+using System.Reflection.Emit;
 
 namespace quizGame
 {
@@ -300,7 +302,43 @@ namespace quizGame
         {
             LoadQuestions(); // Load questions when the form loads
             PopulateLevelComboBox(); // Update level combobox
-            this.label1.BackColor = this.BackColor;
+            createLabel();
+
+        }
+        private void createLabel()
+        {
+            TransparentLabel label5 = new TransparentLabel();
+            label5.Text = "Question:";
+            label5.Location = new Point(550, 21);
+            label5.Size = new Size(200, 50);
+            label5.ForeColor = System.Drawing.Color.White;
+            label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Controls.Add(label5);
+
+            TransparentLabel label7 = new TransparentLabel();
+            label7.Text = "Answers:";  // Nội dung khác
+            label7.Location = new Point(550, 71);  // Vị trí khác
+            label7.Size = new Size(200, 50);
+            label7.ForeColor = System.Drawing.Color.White;
+            label7.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Controls.Add(label7);
+
+            TransparentLabel label6 = new TransparentLabel();
+            label6.Text = "Correct Answer:";
+            label6.Location = new Point(520, 131);  // Position of the label
+            label6.Size = new Size(200, 50);  // Size of the label
+            label6.ForeColor = System.Drawing.Color.White;  // Set text color to ensure visibility
+            label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Controls.Add(label6);  // Add label to form
+
+
+            TransparentLabel label8 = new TransparentLabel();
+            label8.Text = "Bàng danh sách các câu hỏi";
+            label8.Location = new Point(250, 200);  // Position of the label
+            label8.Size = new Size(500, 50);  // Size of the label
+            label8.ForeColor = System.Drawing.Color.White;  // Set text color to ensure visibility
+            label8.Font = new System.Drawing.Font("Microsoft Sans Serif", 16.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Controls.Add(label8);  // Add label to form
         }
         #region Sửa 1 câu hỏi
         private void btnSua_Click(object sender, EventArgs e)

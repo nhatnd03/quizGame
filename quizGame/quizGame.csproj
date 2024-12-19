@@ -83,7 +83,15 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="QuestionAndAnswers.cs" />
+    <Compile Include="Resources\Custom\TransparentLabel.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="StartForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -95,14 +103,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <EmbeddedResource Include="StartForm.resx">
       <DependentUpon>StartForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -124,25 +127,18 @@
     <None Include="Resources\csgo.jpg" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\fortnite.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\gears of war.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\halo.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\questions.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="bin\Debug\quiziz.db" />
-    <None Include="Resources\witcher3.jpg" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\bg.png" />
+    <Content Include="Resources\maintenance.png" />
+    <None Include="Resources\plus.png" />
+    <None Include="Resources\import %281%29.png" />
+    <None Include="Resources\import.png" />
+    <None Include="Resources\delete.png" />
+    <None Include="Resources\data-processing.png" />
     <Content Include="Resources\logoQuizz.ico" />
-    <Content Include="Resources\logoQuizz.png" />
+    <None Include="Resources\start-button.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
