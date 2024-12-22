@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormLevel));
             this.label1 = new System.Windows.Forms.Label();
             this.btnlevel = new System.Windows.Forms.Button();
             this.btnlevel2 = new System.Windows.Forms.Button();
@@ -121,8 +122,9 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.radioButton2);
             this.Controls.Add(this.radioButton1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FormLevel";
-            this.Text = "FormLevel";
+            this.Text = "Chọn mức độ";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormLevel_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();

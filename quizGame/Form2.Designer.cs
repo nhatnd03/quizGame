@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form2));
             this.BtnStart = new System.Windows.Forms.Button();
             this.btnCreateQues = new System.Windows.Forms.Button();
             this.SuspendLayout();
@@ -66,8 +67,9 @@
             this.Controls.Add(this.btnCreateQues);
             this.Controls.Add(this.BtnStart);
             this.DoubleBuffered = true;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form2";
-            this.Text = "Main";
+            this.Text = "Trang chủ";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form2_FormClosing);
             this.ResumeLayout(false);
 
