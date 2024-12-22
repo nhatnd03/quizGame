@@ -37,7 +37,7 @@
             // 
             this.BtnStart.BackColor = System.Drawing.Color.Transparent;
             this.BtnStart.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.BtnStart.Location = new System.Drawing.Point(151, 181);
+            this.BtnStart.Location = new System.Drawing.Point(204, 194);
             this.BtnStart.Name = "BtnStart";
             this.BtnStart.Size = new System.Drawing.Size(375, 182);
             this.BtnStart.TabIndex = 0;
@@ -49,7 +49,7 @@
             // 
             this.btnCreateQues.BackColor = System.Drawing.Color.Transparent;
             this.btnCreateQues.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnCreateQues.Location = new System.Drawing.Point(556, 181);
+            this.btnCreateQues.Location = new System.Drawing.Point(609, 194);
             this.btnCreateQues.Name = "btnCreateQues";
             this.btnCreateQues.Size = new System.Drawing.Size(349, 182);
             this.btnCreateQues.TabIndex = 1;

@@ -188,11 +188,13 @@
     <None Include="Resources\Background copy.png" />
     <None Include="Resources\anh1.jpg" />
     <Content Include="Resources\bg.png" />
+    <None Include="Resources\Cancel.png" />
     <Content Include="Resources\maintenance.png" />
     <Content Include="bin\Debug\cool-hip-hop-loop-251857.wav" />
     <Content Include="bin\Debug\correct-156911.wav" />
     <Content Include="bin\Debug\error-8-206492.wav" />
     <None Include="Resources\qdndhvn.jpg" />
+    <None Include="Resources\Search.png" />
     <Content Include="Resources\Sound\fairy-tale-loop-251859.wav" />
     <Content Include="Resources\Sound\robotic-loop-251861.wav" />
     <None Include="Resources\plus.png" />

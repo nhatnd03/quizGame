@@ -14,6 +14,7 @@ using System.IO;
 using Newtonsoft.Json;
 using quizGame.Resources.Custom;
 using System.Reflection.Emit;
+using DocumentFormat.OpenXml.Office.SpreadSheetML.Y2023.MsForms;
 
 
 namespace quizGame
@@ -24,12 +25,14 @@ namespace quizGame
         private Form2 _form2;
         private string dbPath = "quiziz.db";
         private bool isClosingToForm2 = false;
+
         public StartForm(Form2 form2)
         {
             InitializeComponent();
 
             this.StartPosition = FormStartPosition.CenterScreen;
             _form2 = form2;
+            rdTen.Checked = true;
             this.FormBorderStyle = FormBorderStyle.FixedSingle; // Ngăn resize
             this.MaximizeBox = false; // Ẩn nút phóng to
             this.MinimizeBox = true; // Hiển thị nút thu nhỏ (tuỳ chọn)
@@ -40,22 +43,7 @@ namespace quizGame
 
         private void DgvQuestions_SelectionChanged(object sender, EventArgs e)
         {
-            if (dgvQuestions.SelectedRows.Count > 0)
-            {
-                QuestionAndAnswers selectedQuestion = (QuestionAndAnswers)dgvQuestions.SelectedRows[0].DataBoundItem;
-                txtQues.Text = selectedQuestion.Questions;
-                txtAnsw.Text = selectedQuestion.AnswersString;
-                txtCorrectAns.Text = selectedQuestion.CorrectAnswer.ToString();
-                txtLevel.Text = selectedQuestion.Level.ToString();
-                
-            }
-            else
-            {
-                txtLevel.Clear();
-                txtQues.Clear();
-                txtAnsw.Clear();
-                txtCorrectAns.Clear();
-            }
+
         }
         private void btnAddQuestion_Click(object sender, EventArgs e)
         {
@@ -166,64 +154,54 @@ namespace quizGame
         }
         private void LoadQuestions()
         {
-            string connectionString = $"Data Source={dbPath};Version=3;";
-            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            dgvQuestions.AutoGenerateColumns = false;
+            dgvQuestions.Columns.Clear();
+
+            // Thêm cột STT
+            dgvQuestions.Columns.Add(new DataGridViewTextBoxColumn
             {
-                connection.Open();
-                using (SQLiteCommand command = new SQLiteCommand(connection))
-                {
-                    command.CommandText = "SELECT * FROM questionanswer";
-                    using (SQLiteDataReader reader = command.ExecuteReader())
-                    {
-                        List<QuestionAndAnswers> questions = new List<QuestionAndAnswers>();
-                        while (reader.Read())
-                        {
-                            QuestionAndAnswers question = new QuestionAndAnswers
-                            {
-                                Id = reader.GetInt32(0),
-                                Questions = reader.GetString(1),
-                                Answers = JsonConvert.DeserializeObject<List<string>>(reader.GetString(2)),
-                                CorrectAnswer = reader.GetInt32(3),
-                                Level = reader.GetInt32(4)
-                            };
-                            question.AnswersString = QuestionAndAnswers.JsonStringToString(reader.GetString(2));
-                            questions.Add(question);
-                        }
+                HeaderText = "STT",
+                ReadOnly = true
+            });
 
-                        dgvQuestions.AutoGenerateColumns = false;
-                        dgvQuestions.Columns.Clear();
+            // Các cột khác
+            dgvQuestions.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Questions",
+                HeaderText = "Câu hỏi"
+            });
 
-                        dgvQuestions.Columns.Add(new DataGridViewTextBoxColumn
-                        {
-                            DataPropertyName = "Questions",
-                            HeaderText = "Câu hỏi"
-                        });
+            dgvQuestions.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "AnswersString",
+                HeaderText = "Đáp án"
+            });
 
-                        dgvQuestions.Columns.Add(new DataGridViewTextBoxColumn
-                        {
-                            DataPropertyName = "AnswersString",
-                            HeaderText = "Đáp án"
-                        });
+            dgvQuestions.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "CorrectAnswer",
+                HeaderText = "Đáp án đúng"
+            });
 
-                        dgvQuestions.Columns.Add(new DataGridViewTextBoxColumn
-                        {
-                            DataPropertyName = "CorrectAnswer",
-                            HeaderText = "Đáp án đúng"
-                        });
+            dgvQuestions.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Level",
+                HeaderText = "Độ khó"
+            });
 
-                        dgvQuestions.Columns.Add(new DataGridViewTextBoxColumn
-                        {
-                            DataPropertyName = "Level",
-                            HeaderText = "Độ khó"
-                        });
+            // Gán dữ liệu vào DataGridView
+            dgvQuestions.DataSource = getAllQuestions();
 
-                        dgvQuestions.DataSource = questions;
-                        dgvQuestions.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-                        dgvQuestions.AllowUserToAddRows = false;
-                    }
-                }
+            // Sau khi gán dữ liệu, cập nhật giá trị cho cột STT
+            for (int i = 0; i < dgvQuestions.Rows.Count; i++)
+            {
+                dgvQuestions.Rows[i].Cells[0].Value = i + 1; // Cột STT là cột đầu tiên (cột 0)
             }
+
+            dgvQuestions.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvQuestions.AllowUserToAddRows = false;
         }
+
         private void StartForm_Load(object sender, EventArgs e)
         {
             LoadQuestions(); // Load questions when the form loads
@@ -237,7 +215,8 @@ namespace quizGame
                 QuestionAndAnswers selectedQuestion = (QuestionAndAnswers)dgvQuestions.SelectedRows[0].DataBoundItem;
                 UpdateQuestion(selectedQuestion);
                 MessageBox.Show("Sửa thành công","Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadQuestions(); // Load lại datagridview sau khi cập nhật
+                clear();
+                LoadQuestions();
             }
             else
             {
@@ -270,6 +249,7 @@ namespace quizGame
             if (MessageBox.Show("Bạn có chắc chắn muốn xóa tất cả câu hỏi?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 ClearAllQuestions();
+                clear();
                 LoadQuestions();
             }
         }
@@ -296,6 +276,7 @@ namespace quizGame
                 QuestionAndAnswers selectedQuestion = (QuestionAndAnswers)dgvQuestions.SelectedRows[0].DataBoundItem;
                 DeleteQuestion(selectedQuestion.Id);
                 MessageBox.Show("Xóa Thành công","Thông báo",MessageBoxButtons.OK, MessageBoxIcon.Information);
+                clear();
                 LoadQuestions();
             }
             else
@@ -338,10 +319,7 @@ namespace quizGame
                         command.Parameters.AddWithValue("@Level", int.Parse(txtLevel.Text));
                         command.ExecuteNonQuery();
                         MessageBox.Show("Thêm câu hỏi thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        txtLevel.Clear();
-                        txtQues.Clear();
-                        txtAnsw.Clear();
-                        txtCorrectAns.Clear();
+                        clear();
                        
                         LoadQuestions();
                     }
@@ -372,7 +350,78 @@ namespace quizGame
                 _form2.Show(); // Quay lại Form2
             }
         }
+        public List<QuestionAndAnswers> getAllQuestions()
+        {
+            List<QuestionAndAnswers> questions = new List<QuestionAndAnswers>();
+            string connectionString = $"Data Source={dbPath};Version=3;";
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                using (SQLiteCommand command = new SQLiteCommand(connection))
+                {
+                    command.CommandText = "SELECT * FROM questionanswer";
+                    using (SQLiteDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            QuestionAndAnswers question = new QuestionAndAnswers
+                            {
+                                Id = reader.GetInt32(0),
+                                Questions = reader.GetString(1),
+                                Answers = JsonConvert.DeserializeObject<List<string>>(reader.GetString(2)),
+                                CorrectAnswer = reader.GetInt32(3),
+                                Level = reader.GetInt32(4)
+                            };
+                            question.AnswersString = QuestionAndAnswers.JsonStringToString(reader.GetString(2));
+                            questions.Add(question);
+                        }
+                    }
+                }
+            }
+            return questions;
+        }
+        public void clear()
+        {
+            txtLevel.Clear();
+            txtQues.Clear();
+            txtAnsw.Clear();
+            txtCorrectAns.Clear();
+        }
+        private void button2_Click(object sender, EventArgs e)
+        {
+            clear();
+        }
 
+        private void btnTim_Click(object sender, EventArgs e)
+        {
+            string searchText = txtTim.Text.Trim();  // Lấy giá trị tìm kiếm từ TextBox
 
+            // Kiểm tra nếu radio button "Tìm theo câu hỏi" được chọn
+            if (rdTen.Checked)
+            {
+                // Tìm kiếm theo câu hỏi (so sánh không phân biệt chữ hoa chữ thường)
+                var filteredQuestions = getAllQuestions().Where(q => q.Questions.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+                dgvQuestions.DataSource = filteredQuestions;
+            }
+            // Kiểm tra nếu radio button "Tìm theo level" được chọn
+            else if (rdLevel.Checked)
+            {
+                // Tìm kiếm theo level
+                if (int.TryParse(searchText, out int level))
+                {
+                    var filteredQuestions = getAllQuestions().Where(q => q.Level == level).ToList();
+                    dgvQuestions.DataSource = filteredQuestions;
+                }
+                else
+                {
+                    MessageBox.Show("Vui lòng nhập mức độ hợp lệ!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            // Sau khi gán dữ liệu, cập nhật giá trị cho cột STT
+            for (int i = 0; i < dgvQuestions.Rows.Count; i++)
+            {
+                dgvQuestions.Rows[i].Cells[0].Value = i + 1; // Cột STT là cột đầu tiên (cột 0)
+            }
+        }
     }
 }
