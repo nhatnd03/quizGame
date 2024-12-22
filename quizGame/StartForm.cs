@@ -15,23 +15,26 @@ using Newtonsoft.Json;
 using quizGame.Resources.Custom;
 using System.Reflection.Emit;
 
+
 namespace quizGame
 {
     public partial class StartForm : Form
     {
-        private Form1 mainForm;
+
+        private Form2 _form2;
         private string dbPath = "quiziz.db";
-        public bool isChecked { get; set; } = false;
-        public StartForm()
+        private bool isClosingToForm2 = false;
+        public StartForm(Form2 form2)
         {
             InitializeComponent();
 
+            this.StartPosition = FormStartPosition.CenterScreen;
+            _form2 = form2;
             this.FormBorderStyle = FormBorderStyle.FixedSingle; // Ngăn resize
             this.MaximizeBox = false; // Ẩn nút phóng to
             this.MinimizeBox = true; // Hiển thị nút thu nhỏ (tuỳ chọn)
             CreateDatabase();
             LoadQuestions();
-            PopulateLevelComboBox();
             dgvQuestions.SelectionChanged += DgvQuestions_SelectionChanged; // Sử dụng sự kiện SelectionChanged
         }
 
@@ -43,93 +46,22 @@ namespace quizGame
                 txtQues.Text = selectedQuestion.Questions;
                 txtAnsw.Text = selectedQuestion.AnswersString;
                 txtCorrectAns.Text = selectedQuestion.CorrectAnswer.ToString();
+                txtLevel.Text = selectedQuestion.Level.ToString();
+                
             }
             else
             {
+                txtLevel.Clear();
                 txtQues.Clear();
                 txtAnsw.Clear();
                 txtCorrectAns.Clear();
             }
         }
-
-        private void btnPlay_Click(object sender, EventArgs e)
-        {
-            if (comboBox1.SelectedIndex != -1)
-            {
-                int selectedLevel = comboBox1.SelectedIndex + 1;
-
-                if (mainForm == null)
-                {
-                    mainForm = new Form1(this); // Truyền StartForm vào Form1
-                    mainForm.Owner = this; // Thiết lập Owner để hỗ trợ quay lại
-                }
-
-                List<QuestionAndAnswers> questionsForLevel = GetQuestionsByLevel(selectedLevel);
-                if (questionsForLevel.Count == 0)
-                {
-                    MessageBox.Show($"Không có câu hỏi cho level {selectedLevel}.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-                // Kiểm tra xem checkbox `checkSort` có được chọn hay không
-                if (isChecked)
-                {
-                    // Sắp xếp ngẫu nhiên danh sách câu hỏi
-                    Random random = new Random();
-                    questionsForLevel = questionsForLevel.OrderBy(q => random.Next()).ToList();
-                }
-
-                mainForm.UpdateQuestions(questionsForLevel, selectedLevel);
-                this.Hide();
-                mainForm.Show();
-            }
-            else
-            {
-                MessageBox.Show("Vui lòng chọn level!");
-            }
-        }
-
-
-        private List<QuestionAndAnswers> GetQuestionsByLevel(int level)
-        {
-            string connectionString = $"Data Source={dbPath};Version=3;";
-            int questionsPerLevel = 40; // Số câu hỏi mỗi level
-            int offset = (level - 1) * questionsPerLevel;
-
-            List<QuestionAndAnswers> questions = new List<QuestionAndAnswers>();
-
-            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
-            {
-                connection.Open();
-                using (SQLiteCommand command = new SQLiteCommand(connection))
-                {
-                    command.CommandText = "SELECT * FROM questionanswer LIMIT @Limit OFFSET @Offset";
-                    command.Parameters.AddWithValue("@Limit", questionsPerLevel);
-                    command.Parameters.AddWithValue("@Offset", offset);
-
-                    using (SQLiteDataReader reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            QuestionAndAnswers question = new QuestionAndAnswers
-                            {
-                                Id = reader.GetInt32(0),
-                                Questions = reader.GetString(1),
-                                Answers = JsonConvert.DeserializeObject<List<string>>(reader.GetString(2)),
-                                CorrectAnswer = reader.GetInt32(3)
-                            };
-                            questions.Add(question);
-                        }
-                    }
-                }
-            }
-
-            return questions;
-        }
-
-
-
         private void btnAddQuestion_Click(object sender, EventArgs e)
         {
+ 
+
+
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "Word Documents (*.docx)|*.docx";
             if (openFileDialog.ShowDialog() == DialogResult.OK)
@@ -139,7 +71,6 @@ namespace quizGame
                     ImportQuestionsFromDocx(openFileDialog.FileName);
                     MessageBox.Show("Câu hỏi đã được nhập thành công!");
                     LoadQuestions(); // Reload data after import
-                    PopulateLevelComboBox(); // Update level combobox
                 }
                 catch (Exception ex)
                 {
@@ -159,12 +90,14 @@ namespace quizGame
                                                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
                                                 Question TEXT NOT NULL,
                                                 Answer BLOB NOT NULL,
-                                                CorrectAnswer INTEGER NOT NULL
-                                            )";
+                                                CorrectAnswer INTEGER NOT NULL,
+                                                Level INTEGER NOT NULL
+                                            );";
                     command.ExecuteNonQuery();
                 }
             }
         }
+    
         private void ImportQuestionsFromDocx(string filePath)
         {
             using (WordprocessingDocument doc = WordprocessingDocument.Open(filePath, false))
@@ -178,14 +111,16 @@ namespace quizGame
                         using (SQLiteCommand command = new SQLiteCommand(connection))
                         {
                             command.Transaction = transaction;
-                            command.CommandText = "INSERT INTO questionanswer (Question, Answer, CorrectAnswer) VALUES (@Question, @Answer, @CorrectAnswer)";
+                            command.CommandText = "INSERT INTO questionanswer (Question, Answer, CorrectAnswer, Level) VALUES (@Question, @Answer, @CorrectAnswer, @Level)";
                             command.Parameters.AddWithValue("@Question", "");
                             command.Parameters.AddWithValue("@Answer", "");
                             command.Parameters.AddWithValue("@CorrectAnswer", 0);
+                            command.Parameters.AddWithValue("@Level", 0);
 
                             string question = "";
                             List<string> answers = new List<string>();
                             int correctAnswer = 0;
+                            int level = 0;
 
                             foreach (var paragraph in doc.MainDocumentPart.Document.Body.Descendants<Paragraph>())
                             {
@@ -204,6 +139,7 @@ namespace quizGame
                                         command.Parameters["@Question"].Value = question;
                                         command.Parameters["@Answer"].Value = jsonAnswers;
                                         command.Parameters["@CorrectAnswer"].Value = correctAnswer;
+                                        command.Parameters["@Level"].Value = level;
                                         command.ExecuteNonQuery();
                                     }
                                     else
@@ -212,6 +148,10 @@ namespace quizGame
                                     }
                                     question = "";
                                     answers.Clear();
+                                }
+                                else if (text.StartsWith("Level:"))
+                                {
+                                    level = int.Parse(text.Substring(6).Trim());
                                 }
                                 else
                                 {
@@ -238,33 +178,44 @@ namespace quizGame
                         List<QuestionAndAnswers> questions = new List<QuestionAndAnswers>();
                         while (reader.Read())
                         {
-                            QuestionAndAnswers question = new QuestionAndAnswers();
-                            question.Id = reader.GetInt32(0);
-                            question.Questions = reader.GetString(1);
-                            string jsonAnswers = reader.GetString(2);
-                            question.Answers = JsonConvert.DeserializeObject<List<string>>(jsonAnswers);
-                            question.AnswersString = QuestionAndAnswers.JsonStringToString(jsonAnswers);
-                            question.CorrectAnswer = reader.GetInt32(3);
+                            QuestionAndAnswers question = new QuestionAndAnswers
+                            {
+                                Id = reader.GetInt32(0),
+                                Questions = reader.GetString(1),
+                                Answers = JsonConvert.DeserializeObject<List<string>>(reader.GetString(2)),
+                                CorrectAnswer = reader.GetInt32(3),
+                                Level = reader.GetInt32(4)
+                            };
+                            question.AnswersString = QuestionAndAnswers.JsonStringToString(reader.GetString(2));
                             questions.Add(question);
                         }
 
                         dgvQuestions.AutoGenerateColumns = false;
-                        dgvQuestions.Columns.Clear(); // Clear existing columns
+                        dgvQuestions.Columns.Clear();
 
-                        DataGridViewTextBoxColumn questionColumn = new DataGridViewTextBoxColumn();
-                        questionColumn.DataPropertyName = "Questions";
-                        questionColumn.HeaderText = "Question";
-                        dgvQuestions.Columns.Add(questionColumn);
+                        dgvQuestions.Columns.Add(new DataGridViewTextBoxColumn
+                        {
+                            DataPropertyName = "Questions",
+                            HeaderText = "Câu hỏi"
+                        });
 
-                        DataGridViewTextBoxColumn answerColumn = new DataGridViewTextBoxColumn();
-                        answerColumn.DataPropertyName = "AnswersString";
-                        answerColumn.HeaderText = "Answers";
-                        dgvQuestions.Columns.Add(answerColumn);
+                        dgvQuestions.Columns.Add(new DataGridViewTextBoxColumn
+                        {
+                            DataPropertyName = "AnswersString",
+                            HeaderText = "Đáp án"
+                        });
 
-                        DataGridViewTextBoxColumn correctAnswerColumn = new DataGridViewTextBoxColumn();
-                        correctAnswerColumn.DataPropertyName = "CorrectAnswer";
-                        correctAnswerColumn.HeaderText = "Correct Answer";
-                        dgvQuestions.Columns.Add(correctAnswerColumn);
+                        dgvQuestions.Columns.Add(new DataGridViewTextBoxColumn
+                        {
+                            DataPropertyName = "CorrectAnswer",
+                            HeaderText = "Đáp án đúng"
+                        });
+
+                        dgvQuestions.Columns.Add(new DataGridViewTextBoxColumn
+                        {
+                            DataPropertyName = "Level",
+                            HeaderText = "Độ khó"
+                        });
 
                         dgvQuestions.DataSource = questions;
                         dgvQuestions.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
@@ -273,76 +224,13 @@ namespace quizGame
                 }
             }
         }
-
-        private void PopulateLevelComboBox()
-        {
-            string connectionString = $"Data Source={dbPath};Version=3;";
-            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
-            {
-                connection.Open();
-                using (SQLiteCommand command = new SQLiteCommand("SELECT COUNT(*) FROM questionanswer", connection))
-                {
-                    int totalQuestions = Convert.ToInt32(command.ExecuteScalar());
-                    int numLevels = (int)Math.Ceiling((double)totalQuestions / 40);
-
-                    comboBox1.Items.Clear();
-                    for (int i = 1; i <= numLevels; i++)
-                    {
-                        comboBox1.Items.Add($"Level {i}");
-                    }
-                    if (comboBox1.Items.Count > 0)
-                    {
-                        comboBox1.SelectedIndex = 0;
-                    }
-                }
-            }
-        }
-
         private void StartForm_Load(object sender, EventArgs e)
         {
             LoadQuestions(); // Load questions when the form loads
-            PopulateLevelComboBox(); // Update level combobox
-            createLabel();
-
-        }
-        private void createLabel()
-        {
-            TransparentLabel label5 = new TransparentLabel();
-            label5.Text = "Question:";
-            label5.Location = new Point(550, 21);
-            label5.Size = new Size(200, 50);
-            label5.ForeColor = System.Drawing.Color.White;
-            label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Controls.Add(label5);
-
-            TransparentLabel label7 = new TransparentLabel();
-            label7.Text = "Answers:";  // Nội dung khác
-            label7.Location = new Point(550, 71);  // Vị trí khác
-            label7.Size = new Size(200, 50);
-            label7.ForeColor = System.Drawing.Color.White;
-            label7.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Controls.Add(label7);
-
-            TransparentLabel label6 = new TransparentLabel();
-            label6.Text = "Correct Answer:";
-            label6.Location = new Point(520, 131);  // Position of the label
-            label6.Size = new Size(200, 50);  // Size of the label
-            label6.ForeColor = System.Drawing.Color.White;  // Set text color to ensure visibility
-            label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Controls.Add(label6);  // Add label to form
-
-
-            TransparentLabel label8 = new TransparentLabel();
-            label8.Text = "Bàng danh sách các câu hỏi";
-            label8.Location = new Point(250, 200);  // Position of the label
-            label8.Size = new Size(500, 50);  // Size of the label
-            label8.ForeColor = System.Drawing.Color.White;  // Set text color to ensure visibility
-            label8.Font = new System.Drawing.Font("Microsoft Sans Serif", 16.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Controls.Add(label8);  // Add label to form
         }
         #region Sửa 1 câu hỏi
         private void btnSua_Click(object sender, EventArgs e)
-        {
+        {          
             //Implementation for updating question
             if (dgvQuestions.SelectedRows.Count > 0)
             {
@@ -365,11 +253,12 @@ namespace quizGame
                 connection.Open();
                 using (SQLiteCommand command = new SQLiteCommand(connection))
                 {
-                    command.CommandText = "UPDATE questionanswer SET Question = @Question, Answer = @Answer, CorrectAnswer = @CorrectAnswer WHERE Id = @Id";
+                    command.CommandText = "UPDATE questionanswer SET Question = @Question, Answer = @Answer, CorrectAnswer = @CorrectAnswer, Level = @Level WHERE Id = @Id";
                     command.Parameters.AddWithValue("@Question", txtQues.Text);
                     command.Parameters.AddWithValue("@Answer", JsonConvert.SerializeObject(question.Answers));
                     command.Parameters.AddWithValue("@CorrectAnswer", int.Parse(txtCorrectAns.Text));
                     command.Parameters.AddWithValue("@Id", question.Id);
+                    command.Parameters.AddWithValue("@Level",int.Parse(txtLevel.Text));
                     command.ExecuteNonQuery();
                 }
             }
@@ -381,8 +270,7 @@ namespace quizGame
             if (MessageBox.Show("Bạn có chắc chắn muốn xóa tất cả câu hỏi?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 ClearAllQuestions();
-                LoadQuestions(); // Load lại datagridview sau khi xóa
-                PopulateLevelComboBox(); // Cập nhật lại combobox level
+                LoadQuestions();
             }
         }
 
@@ -402,13 +290,13 @@ namespace quizGame
         #region Xóa 1 câu hỏi
         private void btnDelete_Click(object sender, EventArgs e)
         {
+
             if (dgvQuestions.SelectedRows.Count > 0)
             {
                 QuestionAndAnswers selectedQuestion = (QuestionAndAnswers)dgvQuestions.SelectedRows[0].DataBoundItem;
                 DeleteQuestion(selectedQuestion.Id);
                 MessageBox.Show("Xóa Thành công","Thông báo",MessageBoxButtons.OK, MessageBoxIcon.Information);
                 LoadQuestions();
-                PopulateLevelComboBox(); 
             }
             else
             {
@@ -435,68 +323,56 @@ namespace quizGame
         #region Thêm 1 câu hỏi
         private void btnThem_Click(object sender, EventArgs e)
         {
-            string questionText = txtQues.Text.Trim();
-            string answersText = txtAnsw.Text.Trim();
-            string correctAnswerText = txtCorrectAns.Text.Trim();
-
-            // Validate inputs
-            if (string.IsNullOrEmpty(questionText))
+            if (!string.IsNullOrWhiteSpace(txtQues.Text) && !string.IsNullOrWhiteSpace(txtAnsw.Text) && !string.IsNullOrWhiteSpace(txtCorrectAns.Text) && !string.IsNullOrWhiteSpace(txtLevel.Text))
             {
-                MessageBox.Show("Vui lòng nhập câu hỏi!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            if (string.IsNullOrEmpty(answersText))
-            {
-                MessageBox.Show("Vui lòng nhập các đáp án (dùng dấu phẩy để phân tách)!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            if (!int.TryParse(correctAnswerText, out int correctAnswerIndex) || correctAnswerIndex < 0)
-            {
-                MessageBox.Show("Đáp án đúng phải là một số nguyên không âm!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            // Parse answers
-            List<string> answers = answersText.Split(',').Select(a => a.Trim()).ToList();
-            if (correctAnswerIndex >= answers.Count)
-            {
-                MessageBox.Show("Đáp án đúng phải nằm trong danh sách các đáp án đã nhập!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            // Add to the database
-            string connectionString = $"Data Source={dbPath};Version=3;";
-            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
-            {
-                connection.Open();
-                using (SQLiteCommand command = new SQLiteCommand(connection))
+                string connectionString = $"Data Source={dbPath};Version=3;";
+                using (SQLiteConnection connection = new SQLiteConnection(connectionString))
                 {
-                    command.CommandText = "INSERT INTO questionanswer (Question, Answer, CorrectAnswer) VALUES (@Question, @Answer, @CorrectAnswer)";
-                    command.Parameters.AddWithValue("@Question", questionText);
-                    command.Parameters.AddWithValue("@Answer", JsonConvert.SerializeObject(answers));
-                    command.Parameters.AddWithValue("@CorrectAnswer", correctAnswerIndex);
-
-                    command.ExecuteNonQuery();
+                    connection.Open();
+                    using (SQLiteCommand command = new SQLiteCommand(connection))
+                    {
+                        command.CommandText = "INSERT INTO questionanswer (Question, Answer, CorrectAnswer, Level) VALUES (@Question, @Answer, @CorrectAnswer, @Level)";
+                        command.Parameters.AddWithValue("@Question", txtQues.Text);
+                        command.Parameters.AddWithValue("@Answer", JsonConvert.SerializeObject(txtAnsw.Text.Split(';').Select(a => a.Trim()).ToList()));
+                        command.Parameters.AddWithValue("@CorrectAnswer", int.Parse(txtCorrectAns.Text));
+                        command.Parameters.AddWithValue("@Level", int.Parse(txtLevel.Text));
+                        command.ExecuteNonQuery();
+                        MessageBox.Show("Thêm câu hỏi thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        txtLevel.Clear();
+                        txtQues.Clear();
+                        txtAnsw.Clear();
+                        txtCorrectAns.Clear();
+                       
+                        LoadQuestions();
+                    }
                 }
             }
-
-            // Refresh UI
-            MessageBox.Show("Câu hỏi đã được thêm thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            LoadQuestions(); // Reload questions in the DataGridView
-            PopulateLevelComboBox(); // Update level combo box
+            else
+            {
+                MessageBox.Show("Vui lòng nhập đầy đủ thông tin câu hỏi, đáp án và đáp án đúng!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         #endregion
+        private void StartForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (_form2 != null && !_form2.IsDisposed)
+            {
+                e.Cancel = true;
+                this.Hide(); 
+                _form2.Show(); 
+            }
 
-        private void checkSort_CheckedChanged(object sender, EventArgs e)
-        {
-            isChecked = checkSort.Checked;
         }
-        public void UpdateCheckSortStatus()
+
+        private void button1_Click(object sender, EventArgs e)
         {
-            checkSort.Checked = false; // Cập nhật cả trạng thái hiển thị của checkbox
+            if (_form2 != null && !_form2.IsDisposed)
+            {
+                this.Hide(); // Ẩn form hiện tại
+                _form2.Show(); // Quay lại Form2
+            }
         }
+
 
     }
 }
