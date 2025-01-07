@@ -16,8 +16,8 @@ namespace quizGame
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            StartForm startForm = new StartForm(); // Create StartForm first
-            Application.Run(startForm); // Run the StartForm
+            Form2 Form2 = new Form2(); // Create StartForm first
+            Application.Run(Form2); // Run the StartForm
         }
     }
 }
