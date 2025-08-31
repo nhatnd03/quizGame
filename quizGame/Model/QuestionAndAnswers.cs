@@ -14,7 +14,7 @@ namespace quizGame
         public List<string> Answers { get; set; } = new List<string>();
         public string AnswersString { get; set; }
         public int CorrectAnswer { get; set; }
-        public int Level { get; set; } // Thêm thuộc tính Level
+        public int Level { get; set; } 
         public static string JsonStringToString(string jsonString)
         {
             List<string> answersList = JsonConvert.DeserializeObject<List<string>>(jsonString);
